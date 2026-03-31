@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundación Defiende tus Derechos DTD</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #185FA5;
+      --blue-dark: #0C447C;
+      --blue-light: #E6F1FB;
+      --blue-mid: #378ADD;
+      --orange: #c46a00;
+      --orange-mid: #EF9F27;
+      --orange-light: #FAEEDA;
+      --gray: #f5f5f5;
+      --border: #dde3ec;
+      --text: #1a2233;
+      --text-muted: #5a6a82;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: #f0f4fa; min-height: 100vh; }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--blue);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { color: #fff; font-size: 16px; font-weight: 600; }
+    .nav-logo span { color: var(--orange-mid); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { color: rgba(255,255,255,0.8); font-size: 14px; text-decoration: none; cursor: pointer; transition: color 0.15s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-admin-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .nav-admin-btn:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PUBLIC PAGE ── */
+    .public-page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    .hero {
+      background: var(--blue-light);
+      border: 1px solid #B5D4F4;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      display: flex; gap: 2rem; align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .hero-text { flex: 1; }
+    .hero-badge {
+      display: inline-block;
+      background: var(--orange-mid);
+      color: #fff;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .hero h1 { font-size: 24px; font-weight: 700; color: var(--blue-dark); margin-bottom: 10px; line-height: 1.3; }
+    .hero p { font-size: 14px; color: var(--blue); line-height: 1.7; max-width: 420px; }
+    .hero-cta { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-hero-primary {
+      padding: 10px 22px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 2px solid var(--blue);
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-hero-primary:hover { background: var(--blue); color: #fff; }
+    .btn-hero-secondary {
+      padding: 10px 22px;
+      background: #fff;
+      color: var(--blue-dark);
+      border: 2px solid var(--orange);
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-hero-secondary:hover { background: var(--orange); color: #fff; }
+    .hero-icon {
+      width: 90px; height: 90px;
+      background: var(--blue);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .hero-icon svg { width: 44px; height: 44px; stroke: #fff; fill: none; stroke-width: 2; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+    .card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    .contact-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .contact-item {
+      background: var(--blue-light);
+      border: 1px solid #B5D4F4;
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .contact-icon {
+      width: 34px; height: 34px;
+      background: var(--orange);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-icon svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; }
+    .contact-label { font-size: 11px; color: var(--blue-mid); margin-bottom: 2px; }
+    .contact-val { font-size: 13px; font-weight: 600; color: var(--blue-dark); }
+
+    /* ── FORM ── */
+    .form-section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+    }
+    .form-section h2 { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+    .form-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1.25rem; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text);
+      background: #fafbfd;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { outline: none; border-color: var(--blue-mid); }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .upload-box {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      background: #fafbfd;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .upload-box:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+    .upload-box input[type="file"] { display: none; }
+    .submit-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+    .btn-submit {
+      padding: 11px 30px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-submit:hover { background: #a55900; }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+    .alert.success { background: #EAF3DE; color: #3B6D11; border: 1px solid #C0DD97; display: block; }
+    .alert.error { background: #FCEBEB; color: #A32D2D; border: 1px solid #F7C1C1; display: block; }
+
+    /* ── LOGIN PAGE ── */
+    .login-page {
+      display: flex; align-items: center; justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 2rem;
+    }
+    .login-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      width: 100%; max-width: 340px;
+    }
+    .login-logo { font-size: 16px; font-weight: 700; color: var(--blue); text-align: center; margin-bottom: 4px; }
+    .login-logo span { color: var(--orange); }
+    .login-sub { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 1.5rem; }
+    .login-group { margin-bottom: 12px; }
+    .login-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
+    .login-group input {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px; color: var(--text);
+      background: #fafbfd; font-family: inherit;
+    }
+    .login-group input:focus { outline: none; border-color: var(--blue-mid); }
+    .login-btn {
+      width: 100%; padding: 11px;
+      background: var(--blue);
+      color: #fff; border: none;
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .login-btn:hover { background: var(--blue-dark); }
+    .login-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .login-error { font-size: 12px; color: #A32D2D; margin-top: 8px; text-align: center; display: none; }
+
+    /* ── ADMIN PAGE ── */
+    .admin-page { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .admin-header h2 { font-size: 18px; font-weight: 700; color: var(--text); }
+    .btn-logout {
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px; color: var(--text-muted);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-logout:hover { background: var(--gray); }
+
+    .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--gray); border-radius: var(--radius); padding: 1rem; }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-val { font-size: 26px; font-weight: 700; color: var(--text); }
+    .stat-val.blue { color: var(--blue); }
+    .stat-val.orange { color: var(--orange); }
+
+    .search-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+    .search-row input {
+      flex: 1; padding: 8px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 13px; color: var(--text); background: #fff; font-family: inherit;
+    }
+    .search-row select {
+      padding: 8px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 13px; color: var(--text); background: #fff; font-family: inherit;
+    }
+
+    .tickets-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: #fafbfd; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7f9fc; }
+    .ticket-id { font-family: monospace; font-size: 12px; color: var(--blue); font-weight: 700; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-nuevo { background: var(--blue-light); color: var(--blue); }
+    .badge-revision { background: var(--orange-light); color: var(--orange); }
+    .badge-cerrado { background: var(--gray); color: var(--text-muted); }
+
+    .status-select {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12px; font-family: inherit;
+      background: #fff; color: var(--text);
+      cursor: pointer;
+    }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--blue); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
+    .modal-row { margin-bottom: 12px; }
+    .modal-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .modal-val { font-size: 14px; color: var(--text); line-height: 1.5; }
+    .modal-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+    .btn-archivo {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1px solid #B5D4F4;
+      border-radius: var(--radius);
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-archivo:hover { background: #B5D4F4; }
+
+    .footer { text-align: center; font-size: 12px; color: var(--text-muted); padding: 2rem 0 1rem; }
+
+    @media (max-width: 600px) {
+      .two-col, .contact-bar, .admin-stats { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .hero { flex-direction: column; }
+      .hero-icon { display: none; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Defiende tus <span>Derechos</span> DTD</div>
+  <div class="nav-links">
+    <a onclick="scrollTo('#quienes')">Quiénes somos</a>
+    <a onclick="scrollTo('#servicios')">Servicios</a>
+    <a onclick="scrollTo('#formulario')">Contáctanos</a>
+  </div>
+  <button class="nav-admin-btn" id="adminNavBtn" onclick="goAdmin()">Acceso admin</button>
+</nav>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PÁGINA PÚBLICA -->
+<!-- ══════════════════════════════════════ -->
+<div class="page active" id="page-public">
+  <div class="public-page">
+
+    <div class="hero">
+      <div class="hero-text">
+        <div class="hero-badge">Fundación sin ánimo de lucro</div>
+        <h1>Defendemos tus derechos con compromiso y dignidad</h1>
+        <p>Somos una fundación dedicada a brindar orientación legal y apoyo a personas que enfrentan vulneración de sus derechos fundamentales. Tu caso importa.</p>
+        <div class="hero-cta">
+          <button class="btn-hero-primary" onclick="document.getElementById('formulario').scrollIntoView({behavior:'smooth'})">Solicitar servicio</button>
+          <button class="btn-hero-secondary" onclick="document.getElementById('quienes').scrollIntoView({behavior:'smooth'})">Conocer más</button>
+        </div>
+      </div>
+      <div class="hero-icon">
+        <svg viewBox="0 0 48 48"><path d="M24 4L6 14v10c0 11 7.7 21.3 18 24 10.3-2.7 18-13 18-24V14L24 4z" stroke-linejoin="round"/><path d="M16 24l5 5 11-11"/></svg>
+      </div>
+    </div>
+
+    <div class="two-col" id="quienes">
+      <div class="card">
+        <div class="card-title"><div class="card-dot"></div>Quiénes somos</div>
+        <p>La Fundación DTD nace del compromiso con la justicia social. Contamos con un equipo interdisciplinario de profesionales que trabajan para garantizar el acceso a la información y la defensa de los derechos de cada ciudadano.</p>
+      </div>
+      <div class="card" id="servicios">
+        <div class="card-title"><div class="card-dot"></div>Nuestros servicios</div>
+        <p>Ofrecemos orientación jurídica, acompañamiento en procesos administrativos, apoyo en casos de vulneración de derechos humanos y gestión de tutelas y derechos de petición.</p>
+      </div>
+    </div>
+
+    <div class="contact-bar">
+      <div class="contact-item">
+        <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div><div class="contact-label">Correo</div><div class="contact-val">contacto@dtdfundacion.org</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.17 12 19.79 19.79 0 011.13 3.4 2 2 0 013.11 1.22h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L7.09 9.1a16 16 0 006.29 6.29l1.37-1.37a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
+        <div><div class="contact-label">Teléfono</div><div class="contact-val">+57 (2) 555-0100</div></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div><div class="contact-label">Ubicación</div><div class="contact-val">Cali, Valle del Cauca</div></div>
+      </div>
+    </div>
+
+    <div class="form-section" id="formulario">
+      <h2>Solicitar atención</h2>
+      <div class="form-sub">Completa el formulario y nos pondremos en contacto contigo a la brevedad posible.</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre completo *</label>
+          <input type="text" id="f-nombre" placeholder="Tu nombre completo">
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico *</label>
+          <input type="email" id="f-correo" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="tel" id="f-telefono" placeholder="+57 300 000 0000">
+        </div>
+        <div class="form-group">
+          <label>Tipo de caso</label>
+          <select id="f-tipo">
+            <option value="">Selecciona una categoría</option>
+            <option>Derecho de petición</option>
+            <option>Tutela</option>
+            <option>Vulneración de DDHH</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Descripción del caso *</label>
+          <textarea id="f-descripcion" placeholder="Describe brevemente tu situación y qué tipo de ayuda necesitas..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Adjuntar documento (opcional)</label>
+          <div class="upload-box" onclick="document.getElementById('f-archivo').click()">
+            📎 Haz clic para seleccionar un archivo<br>
+            <span style="font-size:11px;" id="archivo-nombre">PDF, JPG, PNG — máx. 10 MB</span>
+            <input type="file" id="f-archivo" accept=".pdf,.jpg,.jpeg,.png" onchange="mostrarNombreArchivo(this)">
+          </div>
+        </div>
+      </div>
+      <div id="form-alert" class="alert"></div>
+      <div class="submit-row">
+        <button class="btn-submit" id="btnEnviar" onclick="enviarFormulario()">Enviar solicitud</button>
+      </div>
+    </div>
+
+    <div class="footer">© 2025 Fundación Defiende tus Derechos DTD · Cali, Colombia</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- LOGIN ADMIN -->
+<!-- ══════════════════════════════════════ -->
+<div class="page" id="page-login">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">DTD <span>Admin</span></div>
+      <div class="login-sub">Acceso exclusivo para administradores</div>
+      <div class="login-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="l-correo" placeholder="admin@dtdfundacion.org">
+      </div>
+      <div class="login-group">
+        <label>Contraseña</label>
+        <input type="password" id="l-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') iniciarSesion()">
+      </div>
+      <div class="login-error" id="login-error">Correo o contraseña incorrectos.</div>
+      <button class="login-btn" id="btnLogin" onclick="iniciarSesion()">Ingresar al panel</button>
+      <div style="margin-top:14px; text-align:center;">
+        <a onclick="showPage('public')" style="font-size:12px; color:var(--text-muted); cursor:pointer; text-decoration:underline;">← Volver al sitio</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PANEL ADMIN -->
+<!-- ══════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="admin-page">
+    <div class="admin-header">
+      <h2>Panel de administración — DTD</h2>
+      <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-label">Total de solicitudes</div><div class="stat-val" id="stat-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Nuevas</div><div class="stat-val blue" id="stat-nuevas">—</div></div>
+      <div class="stat-card"><div class="stat-label">En revisión</div><div class="stat-val orange" id="stat-revision">—</div></div>
+    </div>
+
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="Buscar por nombre, ticket o correo..." oninput="filtrarTickets()">
+      <select id="search-estado" onchange="filtrarTickets()">
+        <option value="">Todos los estados</option>
+        <option value="Nuevo">Nuevo</option>
+        <option value="En revisión">En revisión</option>
+        <option value="Cerrado">Cerrado</option>
+      </select>
+    </div>
+
+    <div class="tickets-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Tipo de caso</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tickets-tbody">
+          <tr><td colspan="7" class="empty-state">Cargando solicitudes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">© 2025 Fundación DTD · Panel interno</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- MODAL DETALLE -->
+<!-- ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="cerrarModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-ticket">Solicitud</h3>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+    <div class="modal-row"><div class="modal-label">Nombre</div><div class="modal-val" id="m-nombre"></div></div>
+    <div class="modal-row"><div class="modal-label">Correo</div><div class="modal-val" id="m-correo"></div></div>
+    <div class="modal-row"><div class="modal-label">Teléfono</div><div class="modal-val" id="m-telefono"></div></div>
+    <div class="modal-row"><div class="modal-label">Tipo de caso</div><div class="modal-val" id="m-tipo"></div></div>
+    <hr class="modal-divider">
+    <div class="modal-row"><div class="modal-label">Descripción</div><div class="modal-val" id="m-descripcion"></div></div>
+    <hr class="modal-divider">
+    <div class="modal-row" id="m-archivo-row">
+      <div class="modal-label">Documento adjunto</div>
+      <a class="btn-archivo" id="m-archivo-link" target="_blank">Ver documento</a>
+    </div>
+    <div class="modal-row"><div class="modal-label">Fecha de envío</div><div class="modal-val" id="m-fecha"></div></div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════
+  // CONFIGURACIÓN — reemplaza con tus claves
+  // ══════════════════════════════════════
+  const SUPABASE_URL = 'https://sbepcrzunjesbyjdhlyj.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiZXBjcnp1bmplc2J5amRobHlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MDMyNjYsImV4cCI6MjA5MDQ3OTI2Nn0.__ghW9kHKXnuxK41u25v3yWJCZbQtsVa-M0ovIZvFuo';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let todasLasSolicitudes = [];
+
+  // ── NAVEGACIÓN ──
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function goAdmin() {
+    db.auth.getSession().then(({ data }) => {
+      if (data.session) { showPage('admin'); cargarSolicitudes(); }
+      else { showPage('login'); }
+    });
+  }
+
+  // ── FORMULARIO PÚBLICO ──
+  function mostrarNombreArchivo(input) {
+    const nombre = input.files[0] ? input.files[0].name : 'PDF, JPG, PNG — máx. 10 MB';
+    document.getElementById('archivo-nombre').textContent = nombre;
+  }
+
+  async function enviarFormulario() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const correo = document.getElementById('f-correo').value.trim();
+    const telefono = document.getElementById('f-telefono').value.trim();
+    const tipo = document.getElementById('f-tipo').value;
+    const descripcion = document.getElementById('f-descripcion').value.trim();
+    const archivoInput = document.getElementById('f-archivo');
+    const alert = document.getElementById('form-alert');
+    const btn = document.getElementById('btnEnviar');
+
+    alert.className = 'alert';
+    alert.textContent = '';
+
+    if (!nombre || !correo || !descripcion) {
+      alert.className = 'alert error';
+      alert.textContent = 'Por favor completa los campos obligatorios: nombre, correo y descripción.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    let archivo_url = null;
+
+    // Subir archivo si hay uno
+    if (archivoInput.files[0]) {
+      const archivo = archivoInput.files[0];
+      if (archivo.size > 10 * 1024 * 1024) {
+        alert.className = 'alert error';
+        alert.textContent = 'El archivo supera el límite de 10 MB.';
+        btn.disabled = false; btn.textContent = 'Enviar solicitud';
+        return;
+      }
+      const nombreArchivo = `${Date.now()}_${archivo.name}`;
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from('documentos')
+        .upload(nombreArchivo, archivo);
+      if (uploadError) {
+        alert.className = 'alert error';
+        alert.textContent = 'Error al subir el archivo. Intenta de nuevo.';
+        btn.disabled = false; btn.textContent = 'Enviar solicitud';
+        return;
+      }
+      archivo_url = uploadData.path;
+    }
+
+    // Guardar en base de datos
+    const { error } = await db.from('solicitudes').insert([{
+      nombre, correo, telefono, tipo_caso: tipo,
+      descripcion, archivo_url, estado: 'Nuevo'
+    }]);
+
+    if (error) {
+      alert.className = 'alert error';
+      alert.textContent = 'Hubo un error al enviar tu solicitud. Por favor intenta de nuevo.';
+      btn.disabled = false; btn.textContent = 'Enviar solicitud';
+      return;
+    }
+
+    alert.className = 'alert success';
+    alert.textContent = '¡Tu solicitud fue enviada exitosamente! Nos pondremos en contacto contigo pronto.';
+    document.getElementById('f-nombre').value = '';
+    document.getElementById('f-correo').value = '';
+    document.getElementById('f-telefono').value = '';
+    document.getElementById('f-tipo').value = '';
+    document.getElementById('f-descripcion').value = '';
+    archivoInput.value = '';
+    document.getElementById('archivo-nombre').textContent = 'PDF, JPG, PNG — máx. 10 MB';
+    btn.disabled = false;
+    btn.textContent = 'Enviar solicitud';
+  }
+
+  // ── LOGIN ──
+  async function iniciarSesion() {
+    const correo = document.getElementById('l-correo').value.trim();
+    const password = document.getElementById('l-password').value;
+    const errorEl = document.getElementById('login-error');
+    const btn = document.getElementById('btnLogin');
+    errorEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Ingresando...';
+
+    const { error } = await db.auth.signInWithPassword({ email: correo, password });
+
+    if (error) {
+      errorEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Ingresar al panel';
+      return;
+    }
+    btn.disabled = false; btn.textContent = 'Ingresar al panel';
+    showPage('admin');
+    cargarSolicitudes();
+  }
+
+  async function cerrarSesion() {
+    await db.auth.signOut();
+    showPage('public');
+  }
+
+  // ── CARGAR SOLICITUDES ──
+  async function cargarSolicitudes() {
+    const { data, error } = await db
+      .from('solicitudes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return;
+
+    todasLasSolicitudes = data;
+    actualizarStats(data);
+    renderTabla(data);
+  }
+
+  function actualizarStats(data) {
+    document.getElementById('stat-total').textContent = data.length;
+    document.getElementById('stat-nuevas').textContent = data.filter(r => r.estado === 'Nuevo').length;
+    document.getElementById('stat-revision').textContent = data.filter(r => r.estado === 'En revisión').length;
+  }
+
+  function renderTabla(data) {
+    const tbody = document.getElementById('tickets-tbody');
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay solicitudes aún.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(r => {
+      const ticket = `#DTD-${String(r.id).padStart(4, '0')}`;
+      const fecha = new Date(r.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+      const badgeClass = r.estado === 'Nuevo' ? 'badge-nuevo' : r.estado === 'En revisión' ? 'badge-revision' : 'badge-cerrado';
+      return `
+        <tr>
+          <td><span class="ticket-id">${ticket}</span></td>
+          <td>${r.nombre}</td>
+          <td>${r.correo}</td>
+          <td>${r.tipo_caso || '—'}</td>
+          <td>${fecha}</td>
+          <td>
+            <select class="status-select" onchange="cambiarEstado(${r.id}, this.value)">
+              <option ${r.estado === 'Nuevo' ? 'selected' : ''}>Nuevo</option>
+              <option ${r.estado === 'En revisión' ? 'selected' : ''}>En revisión</option>
+              <option ${r.estado === 'Cerrado' ? 'selected' : ''}>Cerrado</option>
+            </select>
+          </td>
+          <td><button onclick='abrirModal(${JSON.stringify(r)})' style="background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600;">Ver</button></td>
+        </tr>`;
+    }).join('');
+  }
+
+  function filtrarTickets() {
+    const texto = document.getElementById('search-input').value.toLowerCase();
+    const estado = document.getElementById('search-estado').value;
+    const filtrados = todasLasSolicitudes.filter(r => {
+      const ticket = `dtd-${String(r.id).padStart(4, '0')}`;
+      const coincideTexto = !texto ||
+        r.nombre.toLowerCase().includes(texto) ||
+        r.correo.toLowerCase().includes(texto) ||
+        ticket.includes(texto);
+      const coincideEstado = !estado || r.estado === estado;
+      return coincideTexto && coincideEstado;
+    });
+    renderTabla(filtrados);
+  }
+
+  async function cambiarEstado(id, nuevoEstado) {
+    await db.from('solicitudes').update({ estado: nuevoEstado }).eq('id', id);
+    const idx = todasLasSolicitudes.findIndex(r => r.id === id);
+    if (idx !== -1) todasLasSolicitudes[idx].estado = nuevoEstado;
+    actualizarStats(todasLasSolicitudes);
+  }
+
+  // ── MODAL ──
+  async function abrirModal(r) {
+    const ticket = `#DTD-${String(r.id).padStart(4, '0')}`;
+    const fecha = new Date(r.created_at).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
+    document.getElementById('modal-ticket').textContent = ticket;
+    document.getElementById('m-nombre').textContent = r.nombre;
+    document.getElementById('m-correo').textContent = r.correo;
+    document.getElementById('m-telefono').textContent = r.telefono || '—';
+    document.getElementById('m-tipo').textContent = r.tipo_caso || '—';
+    document.getElementById('m-descripcion').textContent = r.descripcion;
+    document.getElementById('m-fecha').textContent = fecha;
+
+    const archivoRow = document.getElementById('m-archivo-row');
+    if (r.archivo_url) {
+      const { data } = db.storage.from('documentos').getPublicUrl(r.archivo_url);
+      document.getElementById('m-archivo-link').href = data.publicUrl;
+      archivoRow.style.display = 'block';
+    } else {
+      archivoRow.style.display = 'none';
+    }
+
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function cerrarModal(e) {
+    if (!e || e.target === document.getElementById('modal-overlay')) {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+  }
+
+  // ── VERIFICAR SESIÓN AL CARGAR ──
+  db.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      document.getElementById('adminNavBtn').textContent = 'Panel admin';
+    }
+  });
+</script>
+</body>
+</html>
