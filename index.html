@@ -620,16 +620,20 @@
         return;
       }
       const nombreArchivo = `${Date.now()}_${archivo.name}`;
-      const { data: uploadData, error: uploadError } = await db.storage
-        .from('documentos')
-        .upload(nombreArchivo, archivo);
+     const { data: uploadData, error: uploadError } = await db.storage
+      .from('documentos')
+      .upload(nombreArchivo, archivo, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: archivo.type
+      });
       if (uploadError) {
         alert.className = 'alert error';
         alert.textContent = 'Error al subir el archivo. Intenta de nuevo.';
         btn.disabled = false; btn.textContent = 'Enviar solicitud';
         return;
       }
-      archivo_url = uploadData.path;
+        archivo_url = uploadData.fullPath || uploadData.path;
     }
 
     // Guardar en base de datos
